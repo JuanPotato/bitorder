@@ -45,20 +45,18 @@ impl<'a> BitReaderMsb<'a> {
             ));
         }
 
-        let (chunk, chunk_size) = self.read(len)?;
-        let mut bits = chunk.into();
-        len -= chunk_size;
+        let mut bits = T::ZERO;
 
         while len != 0 {
             let (chunk, chunk_size) = self.read(len)?;
-            bits = (bits << chunk_size) | chunk.into();
+            bits = (bits.saturating_shl(chunk_size)) | chunk.into();
             len -= chunk_size;
         }
 
         Ok(bits)
     }
 
-    fn advance(&mut self, bits: usize) {
+    pub fn advance(&mut self, bits: usize) {
         self.bit_index = 7 - self.bit_index;
         self.bit_index += bits;
         self.index += self.bit_index / 8;
@@ -75,7 +73,6 @@ pub struct BitReaderLsb<'a> {
 }
 
 impl<'a> BitReaderLsb<'a> {
-    #[must_use]
     pub fn new(data: &'a [u8]) -> BitReaderLsb<'a> {
         BitReaderLsb {
             data: data,
@@ -84,7 +81,6 @@ impl<'a> BitReaderLsb<'a> {
         }
     }
 
-    #[must_use]
     fn read(&mut self, bit_len: usize) -> Result<(u8, usize), String> {
         if bit_len == 0 {
             return Err("Read length cannot be zero bits.".into());
@@ -105,7 +101,6 @@ impl<'a> BitReaderLsb<'a> {
         Ok((bits, read_size))
     }
 
-    #[must_use]
     pub fn read_bits<T: Uint>(&mut self, mut len: usize) -> Result<T, String> {
         if len > T::WIDTH {
             return Err(format!(
@@ -115,11 +110,8 @@ impl<'a> BitReaderLsb<'a> {
             ));
         }
 
-        let (chunk, chunk_size) = self.read(len)?;
-        let mut bits = chunk.into();
-        len -= chunk_size;
-
-        let mut prev_chunk_size = chunk_size;
+        let mut bits = T::ZERO;
+        let mut prev_chunk_size = 0;
 
         while len != 0 {
             let (chunk, chunk_size) = self.read(len)?;
@@ -127,13 +119,13 @@ impl<'a> BitReaderLsb<'a> {
             bits |= chunk << prev_chunk_size;
             len -= chunk_size;
 
-            prev_chunk_size = chunk_size;
+            prev_chunk_size += chunk_size;
         }
 
         Ok(bits)
     }
 
-    fn advance(&mut self, bits: usize) {
+    pub fn advance(&mut self, bits: usize) {
         self.bit_index += bits;
         self.index += self.bit_index / 8;
         self.bit_index %= 8;

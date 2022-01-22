@@ -16,7 +16,6 @@ impl<'a> BitWriterMsb<'a> {
         }
     }
 
-    #[must_use]
     fn write(&mut self, bits: u8, bit_len: usize) -> Result<usize, String> {
         if bit_len == 0 {
             return Err("Write length cannot be zero bits.".into());
@@ -27,7 +26,6 @@ impl<'a> BitWriterMsb<'a> {
         }
 
         let write_size = bit_len.min(self.bit_index + 1).min(8);
-        // dbg!((bits, bit_len, self.bit_index, write_size));
 
         let stop = self.bit_index + 1;
         let start = stop - write_size;
@@ -39,13 +37,7 @@ impl<'a> BitWriterMsb<'a> {
         Ok(write_size)
     }
 
-    #[must_use]
-    pub fn write_bits<T: Uint + std::fmt::Debug>(
-        &mut self,
-        n: T,
-        mut len: usize,
-    ) -> Result<(), String> {
-        // dbg!(n);
+    pub fn write_bits<T: Uint>(&mut self, n: T, mut len: usize) -> Result<(), String> {
         if len > T::WIDTH {
             return Err(format!(
                 "Cannot write {} bits from a {} bit wide type",
@@ -68,7 +60,7 @@ impl<'a> BitWriterMsb<'a> {
         Ok(())
     }
 
-    fn advance(&mut self, bits: usize) {
+    pub fn advance(&mut self, bits: usize) {
         self.bit_index = 7 - self.bit_index;
         self.bit_index += bits;
         self.index += self.bit_index / 8;
@@ -85,7 +77,6 @@ pub struct BitWriterLsb<'a> {
 }
 
 impl<'a> BitWriterLsb<'a> {
-    #[must_use]
     pub fn new(data: &'a mut [u8]) -> BitWriterLsb<'a> {
         BitWriterLsb {
             data: data,
@@ -94,7 +85,6 @@ impl<'a> BitWriterLsb<'a> {
         }
     }
 
-    #[must_use]
     fn write(&mut self, bits: u8, bit_len: usize) -> Result<usize, String> {
         if bit_len == 0 {
             return Err("Write length cannot be zero bits.".into());
@@ -115,7 +105,6 @@ impl<'a> BitWriterLsb<'a> {
         Ok(write_size)
     }
 
-    #[must_use]
     pub fn write_bits<T: Uint>(&mut self, mut n: T, mut len: usize) -> Result<(), String> {
         if len > T::WIDTH {
             return Err(format!(
@@ -128,14 +117,14 @@ impl<'a> BitWriterLsb<'a> {
         while len != 0 {
             let chunk = n.get_bit_slice(0, 8).try_into().ok().unwrap();
             let wrote_size = self.write(chunk, len)?;
-            n = n >> wrote_size;
+            n = n.saturating_shr(wrote_size);
             len -= wrote_size;
         }
 
         Ok(())
     }
 
-    fn advance(&mut self, bits: usize) {
+    pub fn advance(&mut self, bits: usize) {
         self.bit_index += bits;
         self.index += self.bit_index / 8;
         self.bit_index %= 8;

@@ -7,9 +7,9 @@ documentation = "https://docs.rs/bitorder"
 homepage = "https://github.com/JuanPotato/bitorder"
 repository = "https://github.com/JuanPotato/bitorder"
 readme = "README.md"
-keywords = ["bit", "binary"]
+keywords = ["bit", "msb", "lsb", "binary", "bitfields", "bitstream"]
+categories = ["encoding", "parsing"]
 license = "MIT"
 edition = "2021"
 
 [dependencies]
-

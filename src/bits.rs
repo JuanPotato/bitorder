@@ -35,20 +35,34 @@ where
         let bitmask = ((!Self::ZERO) >> (Self::WIDTH - len)) << start;
         (self & !bitmask) | ((val << start) & bitmask)
     }
+
+    // Shl that clamps to 0 if rhs is out of range
+    fn saturating_shl(self, rhs: usize) -> Self;
+
+    // Shr that clamps to 0 if rhs is out of range
+    fn saturating_shr(self, rhs: usize) -> Self;
 }
 
 macro_rules! impl_uint_trait {
-    ($num_type:ident, $bit_count:expr) => {
+    ($num_type:ident) => {
         impl Uint for $num_type {
-            const WIDTH: usize = $bit_count;
+            const WIDTH: usize = $num_type::BITS as usize;
             const ZERO: $num_type = 0;
             const ONE: $num_type = 1;
+
+            fn saturating_shl(self, rhs: usize) -> Self {
+                self.checked_shl(rhs as u32).unwrap_or(0)
+            }
+
+            fn saturating_shr(self, rhs: usize) -> Self {
+                self.checked_shr(rhs as u32).unwrap_or(0)
+            }
         }
     };
 }
 
-impl_uint_trait!(u8, 8);
-impl_uint_trait!(u16, 16);
-impl_uint_trait!(u32, 32);
-impl_uint_trait!(u64, 64);
-impl_uint_trait!(u128, 128);
+impl_uint_trait!(u8);
+impl_uint_trait!(u16);
+impl_uint_trait!(u32);
+impl_uint_trait!(u64);
+impl_uint_trait!(u128);

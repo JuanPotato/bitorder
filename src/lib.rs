@@ -34,6 +34,37 @@ mod tests {
     use crate::reader::{BitReaderLsb, BitReaderMsb};
     use crate::writer::{BitWriterLsb, BitWriterMsb};
 
+    macro_rules! make_test {
+        ($test_name:ident, $num_type:ty, $bits:literal, $value:literal) => {
+            #[test]
+            fn $test_name() {
+                let mut output = vec![0u8; 128];
+                for i in 0..=$bits {
+                    let mut b = BitWriterLsb::new(&mut output);
+                    b.advance(i);
+                    b.write_bits::<$num_type>($value, $bits).unwrap();
+
+                    let mut b = BitReaderLsb::new(&output);
+                    b.advance(i);
+                    assert_eq!(b.read_bits::<$num_type>($bits), Ok($value));
+
+                    let mut b = BitWriterMsb::new(&mut output);
+                    b.advance(i);
+                    b.write_bits($value, $bits).unwrap();
+
+                    let mut b = BitReaderMsb::new(&output);
+                    b.advance(i);
+                    assert_eq!(b.read_bits::<$num_type>($bits), Ok($value));
+                }
+            }
+        };
+    }
+
+    make_test!(b8, u8, 8, 0xABu8);
+    make_test!(b16, u16, 16, 0xCAFEu16);
+    make_test!(b32, u32, 32, 0xDEADBEEFu32);
+    make_test!(b64, u64, 64, 0x31415926_53589793u64);
+
     #[test]
     fn msb_read_works() {
         let mut b = BitReaderMsb::new(b"\xCD\x0A");
