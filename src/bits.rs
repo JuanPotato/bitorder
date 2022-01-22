@@ -13,6 +13,7 @@ where
         + Shl<usize, Output = Self>
         + Shr<usize, Output = Self>
         + From<u8>
+        + TryInto<u8>
         + PartialEq
         + Eq
         + Copy,
@@ -26,6 +27,13 @@ where
         let len = stop - start;
         let bitmask = ((!Self::ZERO) >> (Self::WIDTH - len)) << start;
         (self & bitmask) >> start
+    }
+
+    /// Copies the bits [start, stop) from val to self and returns the result
+    fn set_bit_slice(self, start: usize, stop: usize, val: Self) -> Self {
+        let len = stop - start;
+        let bitmask = ((!Self::ZERO) >> (Self::WIDTH - len)) << start;
+        (self & !bitmask) | ((val << start) & bitmask)
     }
 }
 
