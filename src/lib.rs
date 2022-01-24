@@ -31,8 +31,8 @@ pub mod writer;
 
 #[cfg(test)]
 mod tests {
-    use crate::reader::{BitReaderLsb, BitReaderMsb};
-    use crate::writer::{BitWriterLsb, BitWriterMsb};
+    use crate::reader::{BitReaderLsb, BitReaderMsb, read_bits_lsb, read_bits_msb};
+    use crate::writer::{BitWriterLsb, BitWriterMsb, write_bits_lsb, write_bits_msb};
 
     macro_rules! make_test {
         ($test_name:ident, $num_type:ty, $bits:literal, $value:literal) => {
@@ -40,21 +40,14 @@ mod tests {
             fn $test_name() {
                 let mut output = vec![0u8; 128];
                 for i in 0..=$bits {
-                    let mut b = BitWriterLsb::new(&mut output);
-                    b.advance(i);
-                    b.write_bits::<$num_type>($value, $bits).unwrap();
+                    write_bits_lsb::<$num_type>(&mut output, i / 8, i % 8, $bits, $value);
+                    assert_eq!(read_bits_lsb::<$num_type>(&output, i / 8, i % 8, $bits), $value);
 
-                    let mut b = BitReaderLsb::new(&output);
-                    b.advance(i);
-                    assert_eq!(b.read_bits::<$num_type>($bits), Ok($value));
+                    output.clear();
+                    output.resize(128, 0);
 
-                    let mut b = BitWriterMsb::new(&mut output);
-                    b.advance(i);
-                    b.write_bits($value, $bits).unwrap();
-
-                    let mut b = BitReaderMsb::new(&output);
-                    b.advance(i);
-                    assert_eq!(b.read_bits::<$num_type>($bits), Ok($value));
+                    write_bits_msb::<$num_type>(&mut output, i / 8, i % 8, $bits, $value);
+                    assert_eq!(read_bits_msb::<$num_type>(&output, i / 8, i % 8, $bits), $value);
                 }
             }
         };

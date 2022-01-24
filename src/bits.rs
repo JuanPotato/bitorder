@@ -1,22 +1,23 @@
 use core::cmp::{Eq, PartialEq};
 use core::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not, Shl, Shr};
+use std::fmt::Debug;
 
 // Not all traits integer types satisfy, but enough for what I'm doing
 pub trait Uint
-where
-    Self: Sized
-        + BitAnd<Output = Self>
+    where
+        Self: Sized
+        + BitAnd<Output=Self>
         + BitAndAssign
-        + BitOr<Output = Self>
+        + BitOr<Output=Self>
         + BitOrAssign
-        + Not<Output = Self>
-        + Shl<usize, Output = Self>
-        + Shr<usize, Output = Self>
+        + Not<Output=Self>
+        + Shl<usize, Output=Self>
+        + Shr<usize, Output=Self>
         + From<u8>
         + TryInto<u8>
         + PartialEq
         + Eq
-        + Copy,
+        + Copy
 {
     const WIDTH: usize;
     const ONE: Self;
@@ -41,6 +42,9 @@ where
 
     // Shr that clamps to 0 if rhs is out of range
     fn saturating_shr(self, rhs: usize) -> Self;
+
+    fn get_lower_byte(self) -> u8;
+    fn as_u8(self) -> u8;
 }
 
 macro_rules! impl_uint_trait {
@@ -50,12 +54,24 @@ macro_rules! impl_uint_trait {
             const ZERO: $num_type = 0;
             const ONE: $num_type = 1;
 
+            #[inline(always)]
             fn saturating_shl(self, rhs: usize) -> Self {
                 self.checked_shl(rhs as u32).unwrap_or(0)
             }
 
+            #[inline(always)]
             fn saturating_shr(self, rhs: usize) -> Self {
                 self.checked_shr(rhs as u32).unwrap_or(0)
+            }
+
+            #[inline(always)]
+            fn get_lower_byte(self) -> u8 {
+                (self & 0xff) as u8
+            }
+
+            #[inline(always)]
+            fn as_u8(self) -> u8 {
+                (self & 0xff) as u8
             }
         }
     };

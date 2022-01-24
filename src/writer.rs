@@ -130,3 +130,46 @@ impl<'a> BitWriterLsb<'a> {
         self.bit_index %= 8;
     }
 }
+
+pub fn write_bits_lsb<T: Uint>(data: &mut [u8], mut byte_index: usize, mut bit_index: usize, mut len: usize, mut bits: T) {
+    while len != 0 {
+        // Write chunk
+        let chunk = bits.get_lower_byte();
+        let chunk_size = len.min(8 - bit_index);
+
+        let start = bit_index;
+        let stop = start + chunk_size;
+
+        data[byte_index] = data[byte_index].set_bit_slice(start, stop, chunk);
+
+        // Advance
+        bit_index += chunk_size;
+        byte_index += bit_index / 8;
+        bit_index %= 8;
+
+        // Remove lower bits
+        bits = bits.saturating_shr(chunk_size);
+        len -= chunk_size;
+    }
+}
+
+pub fn write_bits_msb<T: Uint>(data: &mut [u8], mut byte_index: usize, mut bit_index: usize, mut len: usize, mut bits: T) {
+    while len != 0 {
+        // Write chunk
+        let chunk_size = len.min(8 - bit_index);
+        let chunk = bits.get_bit_slice(len - chunk_size, len).as_u8();
+
+        let stop = 8 - bit_index;
+        let start = stop - chunk_size;
+
+        data[byte_index] = data[byte_index].set_bit_slice(start, stop, chunk);
+
+        // Advance
+        bit_index += chunk_size;
+        byte_index += bit_index / 8;
+        bit_index %= 8;
+
+        // Remove top bits
+        len -= chunk_size;
+    }
+}

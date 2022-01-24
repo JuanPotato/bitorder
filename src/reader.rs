@@ -131,3 +131,57 @@ impl<'a> BitReaderLsb<'a> {
         self.bit_index %= 8;
     }
 }
+
+pub fn read_bits_lsb<T: Uint>(data: &[u8], mut byte_index: usize, mut bit_index: usize, mut len: usize) -> T {
+    let mut bits = T::ZERO;
+    let mut prev_chunk_size = 0;
+
+    while len != 0 {
+        // Read chunk
+        let chunk_size = len.min(8 - bit_index).min(8);
+
+        let start = bit_index;
+        let stop = start + chunk_size;
+
+        let chunk = data[byte_index].get_bit_slice(start, stop);
+
+        // Advance
+        bit_index += chunk_size;
+        byte_index += bit_index / 8;
+        bit_index %= 8;
+
+        // Add to bits
+        let chunk: T = chunk.into();
+        bits |= chunk << prev_chunk_size;
+        len -= chunk_size;
+
+        prev_chunk_size += chunk_size;
+    }
+
+    bits
+}
+
+pub fn read_bits_msb<T: Uint>(data: &[u8], mut byte_index: usize, mut bit_index: usize, mut len: usize) -> T {
+    let mut bits = T::ZERO;
+
+    while len != 0 {
+        // Read chunk
+        let chunk_size = len.min(8 - bit_index);
+
+        let stop = 7 - bit_index + 1;
+        let start = stop - chunk_size;
+
+        let chunk = data[byte_index].get_bit_slice(start, stop);
+
+        // Advance
+        bit_index += chunk_size;
+        byte_index += bit_index / 8;
+        bit_index %= 8;
+
+        // Add to bits
+        bits = (bits.saturating_shl(chunk_size)) | chunk.into();
+        len -= chunk_size;
+    }
+
+    bits
+}
