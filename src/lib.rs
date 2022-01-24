@@ -3,25 +3,25 @@ A small library to read and write bits in Lsb or Msb order.
 
 # Example
 ```
-use bitorder::writer::BitWriterMsb;
-use bitorder::containers::BitReaderMsb;
+use bitorder::container::{BitReader, BitWriter};
+use bitorder::{Msb0, BitOrder};
 
 let mut data = vec![0u8; 2];
-let mut b = BitWriterMsb::new(&mut data);
-b.write_bits(1u8, 1).unwrap();
-b.write_bits(2u8, 2).unwrap();
-b.write_bits(3u8, 3).unwrap();
-b.write_bits(4u8, 4).unwrap();
-b.write_bits(5u8, 5).unwrap();
+let mut b = BitWriter::<Msb0>::new(&mut data);
+b.write_bits(1, 1u8);
+b.write_bits(2, 2u8);
+b.write_bits(3, 3u8);
+b.write_bits(4, 4u8);
+b.write_bits(5, 5u8);
 
 assert_eq!(&data, b"\xCD\x0A"); // http://mjfrazer.org/mjfrazer/bitfields/
 
-let mut b = BitReaderMsb::new(&data);
-assert_eq!(b.read_bits::<u8>(1), Ok(1u8));
-assert_eq!(b.read_bits::<u8>(2), Ok(2u8));
-assert_eq!(b.read_bits::<u8>(3), Ok(3u8));
-assert_eq!(b.read_bits::<u8>(4), Ok(4u8));
-assert_eq!(b.read_bits::<u8>(5), Ok(5u8));
+let mut b = BitReader::<Msb0>::new(&data);
+assert_eq!(b.read_bits::<u8>(1), 1u8);
+assert_eq!(b.read_bits::<u8>(2), 2u8);
+assert_eq!(b.read_bits::<u8>(3), 3u8);
+assert_eq!(b.read_bits::<u8>(4), 4u8);
+assert_eq!(b.read_bits::<u8>(5), 5u8);
 ```
  */
 

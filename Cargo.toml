@@ -13,4 +13,4 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
-byteorder = "1.4"
+deku = "0.12.5"
