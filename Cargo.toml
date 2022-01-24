@@ -1,16 +1,16 @@
 [package]
 name = "bitorder"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Hasan Ibraheem <hasan@juanpota.to>"]
 description = "Library to read and write bits in lsb or msb order."
 documentation = "https://docs.rs/bitorder"
 homepage = "https://github.com/JuanPotato/bitorder"
 repository = "https://github.com/JuanPotato/bitorder"
 readme = "README.md"
-keywords = ["bit", "msb", "lsb", "binary", "bitfields", "bitstream"]
+keywords = ["bit", "msb", "lsb", "binary", "bitfields"]
 categories = ["encoding", "parsing"]
 license = "MIT"
 edition = "2021"
 
-[dependencies]
+[dev-dependencies]
 deku = "0.12.5"
